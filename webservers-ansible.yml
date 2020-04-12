@@ -1,0 +1,14 @@
+---
+- hosts: web-servers
+  tasks:
+   - name: Install apache on webservers
+	 yum: name=httpd state=latest
+   - name: Write Apache config file
+	 template: src=/root/httpd.conf dest=/etc/httpd.conf
+	 notify:
+	  - restart apache
+   - name: Ensure Apache is running (and enabled at boot)
+	 service: name=httpd state=started enabled=yes
+  handlers:
+   - name: restart apache
+     service: name=httpd state=restarted

@@ -1,0 +1,16 @@
+---
+- hosts: ubuntu_server
+  become: true
+  tasks:
+  
+  - name: Change the file permissions for other files in MOTD directory
+    file:
+     path: /etc/update-motd.d/*
+     mode: '0644'
+  - name: Copy the MOTD file to /etc/update-motd.d directory
+    copy:
+     src: ./motd2.txt
+     dest: /etc/update-motd.d/01-custom
+     mode: '0755'
+     
+ 

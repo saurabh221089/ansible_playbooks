@@ -1,0 +1,41 @@
+---
+- hosts: ubuntu_server
+  become: true
+  
+  vars: 
+   ansible_sudo_pass: "ubuntu"
+  
+  tasks:
+  - name: Apt-get update
+    apt:
+     update_cache: yes
+     
+  - name: Install JDK
+    apt:
+     name: default-jdk
+     state: latest
+
+  - name: Download tomcat
+    get_url: 
+     url: http://apachemirror.wuchna.com/tomcat/tomcat-9/v9.0.34/bin/apache-tomcat-9.0.34.tar.gz 
+     dest: /opt/apache-tomcat-9.0.34.tar.gz
+
+  - name: Unarchive a file that is already on the remote machine
+    unarchive:
+     src: /opt/apache-tomcat-9.0.34.tar.gz
+     dest: /opt/
+     remote_src: yes
+
+  - name: Create Tomcat as a service
+    copy:
+     src: tomcat.service
+     dest: /etc/systemd/system/tomcat.service
+     mode: '0777'
+     follow: yes
+
+  - name: Run Tomcat service and enable at boot
+    systemd:
+     daemon_reload: yes
+     name: tomcat
+     state: started
+     enabled: yes

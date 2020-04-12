@@ -1,0 +1,63 @@
+---
+- name: Devops tools playbook
+  hosts: rpi_servers
+  tasks:
+  
+	 - name: Add specified repository into sources list.
+	   apt_repository:
+		repo: deb http://archive.canonical.com/ubuntu hardy partner
+		state: present
+
+	 - name: Update repositories cache
+	   apt: update_cache: yes
+
+	 - name: Install dependencies
+	   apt: name="{{ item }}" state=installed force=yes 
+	   with_items:
+		- python
+		- python-setuptools
+		- python-dev
+		- build-essential
+		- python-pip
+		- python-mysqldb
+		- espeak
+		- curl
+
+	 - name: Install coding tools
+	   apt: name="{{ item }}" state=installed force=yes
+	   with_items:
+		- zsh
+		- git
+		- code
+		
+	 - name: Change the default shell to ZSH
+	   command: "chsh -s /bin/zsh"
+	   become: yes
+	   
+	 - name: Install Oh-my-zsh plugin
+	   command: 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-myzsh/master/tools/install.sh)"'
+	   
+	 - name: Change the ZSH theme
+	   copy: content='ZSH_THEME="agnoster"\n plugins=(git osx docker docker-compose tmux common-aliases)' dest="{{ home_dir }}/.zshrc"
+		
+	 - name: Install Docker
+	   apt: name="{{ item }}" state=present
+		- docker-ce
+		- docker-ce-cli
+		- containerd.io
+		
+	 - name: Enable Docker CE service at startup
+	   service: name: docker state: started enabled: yes
+
+	 - name: Install AWS-CLI & Docker-Compose
+	   pip: name="{{ item }}" state=latest
+	   with_items:
+		- awscli
+		- docker-compose
+		
+	 - name: "Send notification email"
+       mail:
+         to: devops@corp.com
+         subject: Server Deployed!
+         body: Web Server Deployed Successfully
+       ignore_errors: yes

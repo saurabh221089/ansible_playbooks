@@ -1,0 +1,19 @@
+---
+  - hosts: docker_servers
+    become: true
+    vars:
+     container_name: hello-world-server
+     ansible_sudo_pass: "ubuntu"
+    
+    tasks:
+    - name: stop previous docker container
+      shell: docker stop {{ container_name }}
+      
+    - name: remove stopped container
+      shell: docker rm -f {{ container_name }}
+      
+    - name: pull latest image from docker hub
+      shell: docker image pull saurabh221089/hello-world-docker-container:latest
+      
+    - name: create container from latest image
+      shell: docker run -d --name {{ container_name }} --restart always -p 8090:8080 saurabh221089/hello-world-docker-container:latest
