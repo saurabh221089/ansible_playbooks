@@ -1,0 +1,33 @@
+---
+- hosts: ubuntu_server
+  become: true
+  vars: 
+    splunk_master: 192.168.1.83
+  tasks:
+  - name: Download the Splunk forwarder
+    get_url:
+      url: https://www.splunk.com/bin/splunk/DownloadActivityServlet?architecture=x86_64&platform=linux&version=8.0.3&product=universalforwarder&filename=splunkforwarder-8.0.3-a6754d8441bf-linux-2.6-amd64.deb&wget=true
+      dest: /opt
+  - name: Install the Splunk forwarder
+    apt:
+      deb: /opt/splunkforwarder-8.0.3-a6754d8441bf-linux-2.6-amd64.deb
+  - name: Start the splunk service at boot
+    shell: splunk enable boot-start --accept-license
+    args:
+      chdir: /opt/splunkforwarder/bin
+  - name: Add the forward server
+    shell: splunk add forward-server {{splunk_master}}:9997
+    args:
+      chdir: /opt/splunkforwarder/bin
+  - name: Add the access logs monitor
+    shell: splunk add monitor -source /var/log/apache2/access.log -sourcetype apache_access_logs -index remotelogs
+    args:
+      chdir: /opt/splunkforwarder/bin
+  - name: Add the error logs monitor
+    shell: splunk add monitor -source /var/log/apache2/error.log -sourcetype apache_error_logs -index remotelogs
+    args:
+      chdir: /opt/splunkforwarder/bin
+  - name: Restart splunk forwarder instance
+    shell: splunk restart
+    args:
+      chdir: /opt/splunkforwarder/bin
